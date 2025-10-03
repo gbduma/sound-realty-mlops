@@ -1,0 +1,104 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Bytecode (explicit per their starter)
+*.pyc
+
+# Virtual envs / Conda / build caches
+.venv/
+venv/
+.env
+.env.*
+.conda/
+.mamba/
+pip-wheel-metadata/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Packaging / build
+build/
+dist/
+.eggs/
+*.egg-info/
+
+# Test / tooling caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.tox/
+.nox/
+.coverage
+.coverage.*
+htmlcov/
+
+# Logs
+logs/
+*.log
+
+# IDEs / editors
+.vscode/
+.idea/
+*.code-workspace
+
+# OS-specific
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# --- Data & artifacts ---
+# Keep the three provided CSVs; ignore everything else you might generate.
+data/raw/
+data/interim/
+data/processed/
+data/external/
+!data/kc_house_data.csv
+!data/zipcode_demographics.csv
+!data/future_unseen_examples.csv
+
+# Models & artifacts (explicit per their starter)
+model/
+models/
+artifacts/
+checkpoints/
+
+# Reports/plots (keep a placeholder README if you want the folder in repo)
+reports/
+!reports/README.md
+
+# Docker / compose overrides
+docker-compose.override.yml
+*.pid
+
+# Terraform / IaC
+infra/terraform/.terraform/
+infra/terraform/.terraform.lock.hcl
+infra/terraform/*.tfstate
+infra/terraform/*.tfstate.*
+infra/terraform/crash.log
+infra/terraform/override.tf
+infra/terraform/override.tf.json
+infra/terraform/*_override.tf
+infra/terraform/*_override.tf.json
+
+# Credentials / keys (defense-in-depth)
+*.pem
+*.key
+*.crt
+*.der
+*.p12
+*.pfx
+*.csr
+*.pub
+*.jks
+*.keystore
+*.ovpn
+.aws/
+**/secrets.*
+**/*_secret.*
+**/*_secrets.*
+**/id_rsa
+**/id_ed25519
