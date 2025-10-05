@@ -1,4 +1,5 @@
-FROM mambaorg/micromamba:1.5.8 as base
+# Dockerfile
+FROM mambaorg/micromamba:1.5.8 AS base
 WORKDIR /srv
 
 # Copy env spec and create env
@@ -13,5 +14,5 @@ WORKDIR /srv
 COPY . /srv
 
 EXPOSE 8080
-# Default: run the API. CI will override this CMD to run tests instead.
+# Default command (CI overrides this with a different command)
 CMD ["micromamba","run","-n","housing","uvicorn","app.main:app","--host","0.0.0.0","--port","8080"]
