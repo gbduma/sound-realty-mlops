@@ -26,7 +26,7 @@ jobs:
 
       - name: Train & test inside container
         run: |
-          docker run --rm \
-            -e PYTHONUNBUFFERED=1 \
-            sound-realty-mlops:ci \
-            micromamba run -n housing bash -lc "python create_model.py && pytest -q"
+          docker run --rm sound-realty-mlops:ci micromamba run -n housing python -V
+          docker run --rm sound-realty-mlops:ci micromamba run -n housing python create_model.py
+          docker run --rm sound-realty-mlops:ci micromamba run -n housing pytest -q
+
