@@ -1,35 +1,38 @@
+# tests/test_api.py
+from __future__ import annotations
+
+import sys
 from pathlib import Path
 import subprocess
-import sys
+
 import pandas as pd
 from fastapi.testclient import TestClient
 
-# Import after potential model build to avoid startup failures
+
 def ensure_model():
     model_pkl = Path("model/model.pkl")
     feats_json = Path("model/model_features.json")
     if not (model_pkl.exists() and feats_json.exists()):
         subprocess.check_call([sys.executable, "create_model.py"])
 
+
 def test_health_and_predict_full():
     ensure_model()
 
-    # Lazy import so app can find model artifacts at startup
-    from app.main import app
+    # Import app after model is ensured to avoid startup errors
+    from app.main import app  # noqa: WPS433
 
     client = TestClient(app)
 
-    # Health check
+    # health
     r = client.get("/health")
     assert r.status_code == 200
     assert "model_version" in r.json()
 
-    # Use the first future example
+    # pick a real row
     df = pd.read_csv("data/future_unseen_examples.csv")
-    assert len(df) > 0, "future_unseen_examples.csv is empty"
-
+    assert not df.empty, "future_unseen_examples.csv is empty"
     payload = df.iloc[0].to_dict()
-    # Make sure we don't accidentally send prohibited fields (usually not present here, but just in case)
     for bad in ("price", "date", "id"):
         payload.pop(bad, None)
 
