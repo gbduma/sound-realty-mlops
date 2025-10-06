@@ -1,8 +1,19 @@
 import json, time, os
 import numpy as np
 import pandas as pd
+from typing import Dict, Any
 from .features import build_features, load_demographics
 from .model_loader import load_model
+
+NUMERIC_KINDS = {"i", "u", "f"}  # int, unsigned, float
+
+def _coerce_df_numeric(df: pd.DataFrame) -> pd.DataFrame:
+    # try numeric for all non-object columns; object columns we try-to-numeric where reasonable
+    for c in df.columns:
+        # first try numeric coercion if it looks numeric-ish
+        if df[c].dtype.kind in NUMERIC_KINDS or df[c].dtype == "O":
+            df[c] = pd.to_numeric(df[c], errors="ignore")
+    return df
 
 def _py(v):
     # turn numpy types into plain python scalars for JSON
