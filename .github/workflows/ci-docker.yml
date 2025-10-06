@@ -24,11 +24,13 @@ jobs:
           tags: sound-realty-mlops:ci
           load: true   # load image into the runner's Docker engine
 
+      - name: Inspect image contents
+        run: |
+          docker run --rm -w /srv sound-realty-mlops:ci /bin/bash -lc "pwd && ls -la && echo '--- data ---' && ls -la data || true"
+
       - name: Train & test inside container
         run: |
-          docker run --rm \
-            -e PYTHONUNBUFFERED=1 \
-            sound-realty-mlops:ci \
-            /bin/bash -lc "micromamba run -n housing python -V && micromamba run -n housing python create_model.py && micromamba run -n housing pytest -q"
-
+          docker run --rm -w /srv sound-realty-mlops:ci micromamba run -n housing python -V
+          docker run --rm -w /srv sound-realty-mlops:ci micromamba run -n housing python training/create_model.py
+          docker run --rm -w /srv sound-realty-mlops:ci micromamba run -n housing pytest -q
 

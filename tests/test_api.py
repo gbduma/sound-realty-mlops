@@ -1,6 +1,6 @@
 # tests/test_api.py
 from __future__ import annotations
-
+import runpy
 import sys
 from pathlib import Path
 import subprocess
@@ -12,8 +12,13 @@ from fastapi.testclient import TestClient
 def ensure_model():
     model_pkl = Path("model/model.pkl")
     feats_json = Path("model/model_features.json")
-    if not (model_pkl.exists() and feats_json.exists()):
-        subprocess.check_call([sys.executable, "create_model.py"])
+    if model_pkl.exists() and feats_json.exists():
+        return
+    trn_script = Path("training/create_model.py")
+    if trn_script.exists():
+        runpy.run_path(str(trn_script))
+    else:
+        raise FileNotFoundError("Could not find create_model.py in repo training/")
 
 
 def test_health_and_predict_full():
