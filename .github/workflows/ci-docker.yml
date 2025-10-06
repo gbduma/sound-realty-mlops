@@ -30,7 +30,7 @@ jobs:
 
       - name: Train & test inside container
         run: |
-          docker run --rm -w /srv -e PYTHONPATH=/srv sound-realty-mlops:ci micromamba run -n housing python -V
-          docker run --rm -w /srv -e PYTHONPATH=/srv sound-realty-mlops:ci micromamba run -n housing python training/create_model.py
-          docker run --rm -w /srv -e PYTHONPATH=/srv sound-realty-mlops:ci micromamba run -n housing pytest -q
-
+          docker run --rm -w /srv -e PYTHONPATH=/srv sound-realty-mlops:ci /bin/bash -lc \
+            "micromamba run -n housing python -V && \
+             micromamba run -n housing python training/create_model.py && \
+             micromamba run -n housing pytest -q"
