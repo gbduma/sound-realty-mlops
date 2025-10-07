@@ -12,7 +12,7 @@ def health():
 @app.post("/predict/full", response_model=PredictionOut)
 def predict_full(inp: FullInput):
     try:
-        return service.predict_full(inp.dict())
+        return service.predict_full(inp.model_dump())
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 

@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 
 def ensure_model():
+    # safety net/sanity check: use this when running tests manually
     model_pkl = Path("model/model.pkl")
     feats_json = Path("model/model_features.json")
     if model_pkl.exists() and feats_json.exists():
@@ -22,10 +23,10 @@ def ensure_model():
 
 
 def test_health_and_predict_full():
-    ensure_model()
+    # ensure_model()
 
     # Import app after model is ensured to avoid startup errors
-    from app.main import app  # noqa: WPS433
+    from app.main import app  
 
     client = TestClient(app)
 
