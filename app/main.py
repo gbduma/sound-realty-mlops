@@ -9,6 +9,10 @@ service = PredictionService()  # reads env MODEL_URI, loads demographics cache
 def health():
     return {"status": "ok", "model_version": service.model_version}
 
+@app.get("/model/metadata")
+def model_metadata():
+    return service.get_metadata()
+
 @app.post("/predict/full", response_model=PredictionOut)
 def predict_full(inp: FullInput):
     try:
