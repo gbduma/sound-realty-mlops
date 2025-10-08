@@ -33,7 +33,8 @@ class PredictionService:
 
         # Determine which model features come from demographics vs request
         demo_cols = set(self.demo_df.columns) - {"zipcode"}  # everything except the join key
-        self.required_request_features: List[str] = [f for f in self.feature_order if f not in demo_cols]
+        self.required_request_features: List[str] =["zipcode"] + [f for f in self.feature_order 
+                                                                  if f not in demo_cols and f != "zipcode"]
 
         # Preload metrics (if present)
         self._metrics_path = Path(os.getenv("METRICS_PATH", "model/metrics.json"))
@@ -88,7 +89,7 @@ class PredictionService:
     def predict_minimal(self, payload: Dict[str, Any]) -> Dict[str, Any]:
         """
         Accept only the strictly required request-side fields.
-        We still join demographics and build the final matrix internally.
+        We join demographics and build the final matrix internally.
         """
         missing = [k for k in self.required_request_features if k not in payload]
         if missing:

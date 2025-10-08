@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from typing import Dict, Any
 from .schemas import FullInput, MinimalInput, PredictionOut
 from .service import PredictionService
 
@@ -21,8 +22,8 @@ def predict_full(inp: FullInput):
         raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/predict/minimal", response_model=PredictionOut)
-def predict_minimal(inp: MinimalInput):
+def predict_minimal(payload: Dict[str, Any]):
     try:
-        return service.predict_minimal(inp.payload)
+        return service.predict_minimal(payload)
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
