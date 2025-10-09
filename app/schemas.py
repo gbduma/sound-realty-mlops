@@ -1,4 +1,6 @@
-from typing import Optional, Dict, Any, Tuple, Type
+from __future__ import annotations
+
+from typing import Optional, Dict, Any, Tuple, Type, List
 import pandas as pd
 from pydantic import BaseModel, create_model, Field
 
@@ -34,8 +36,25 @@ class MinimalInput(BaseModel):
     # accepts a subset of required features (we’ll validate against model_features.json in service.py)
     payload: Dict[str, Any]
 
+class CompsInfo(BaseModel):
+    comp_count: int = Field(0, description="Number of comps used")
+    comps_estimate: Optional[float] = Field(None, description="Median price of comps")
+    comps_band: Optional[Tuple[float, float]] = Field(None, description="(p5, p95) band for comps")
+    avg_dist_km: Optional[float] = Field(None, description="Mean distance (km) of comps")
+
+class QualityInfo(BaseModel):
+    ood_score: Optional[float] = Field(None, description="Out-of-distribution score (0–1, higher is more typical)")
+    confidence: Optional[float] = Field(None, description="Heuristic confidence (0–1)")
+    messages: List[str] = Field(default_factory=list, description="Validation messages")
+
+class AuxOut(BaseModel):
+    comps: Optional[CompsInfo] = None
+    quality: Optional[QualityInfo] = None
+
 class PredictionOut(BaseModel):
     prediction: float
     model_version: str
     features_used: Dict[str, Any]
+    aux: Optional[AuxOut] = None
     latency_ms: float
+
