@@ -36,7 +36,7 @@ class PredictionService:
         self._ensure_loaded(self.default_model_name)
 
         # Load demographics (for backend join)
-        self.demo_df = load_demographics(os.getenv("DEMO_URI", "data/zipcode_demographics.csv"))
+        self.demo_df = load_demographics("data/zipcode_demographics.csv")
 
         # Build training frame for comps & OOD (load once)
         self.sales_df = pd.read_csv("data/kc_house_data.csv")
