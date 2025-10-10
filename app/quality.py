@@ -4,6 +4,16 @@ import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 
+def _sigmoid01(raw) -> float:
+    """
+    Return a (0,1) score. Accepts scalar or ndarray. If an array is passed,
+    reduce to a scalar (mean) before applying sigmoid to avoid deprecation.
+    """
+    arr = np.asarray(raw, dtype=float)
+    score = arr.item() if arr.size == 1 else float(arr.ravel().mean())
+    # score is now a plain float, not an array
+    return float(1.0 / (1.0 + np.exp(-score)))
+
 class OODGuard:
     def __init__(self, X_train: pd.DataFrame):
         # numeric only for OOD
@@ -16,7 +26,7 @@ class OODGuard:
         # returns anomaly score in [0,1], where 1 is very typical
         x = pd.DataFrame([row]).reindex(columns=self.cols).fillna(0)
         raw = self.clf.score_samples(x.values)  # higher is more normal
-        return float(1 / (1 + np.exp(-raw)))  # squashed to (0,1)
+        return _sigmoid01(raw)  # squashed to (0,1)
 
 def basic_rules(row: Dict[str, Any]) -> Dict[str, Any]:
     msgs = []
