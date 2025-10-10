@@ -11,6 +11,7 @@ dependencies:
   - pydantic
   - xgboost
   - lightgbm
+  - boto3
   - requests
   - python-dotenv
   - ipykernel

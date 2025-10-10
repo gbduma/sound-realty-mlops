@@ -8,9 +8,8 @@ import subprocess
 import pandas as pd
 from fastapi.testclient import TestClient
 
-
 def ensure_model():
-    # safety net/sanity check: use this when running tests manually
+    # safety net/sanity check: only used this when running tests manually
     model_pkl = Path("model/model.pkl")
     feats_json = Path("model/model_features.json")
     if model_pkl.exists() and feats_json.exists():

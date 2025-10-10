@@ -12,6 +12,7 @@ from .model_loader import load_model_from_dir
 from concurrent.futures import ThreadPoolExecutor
 from .comps import CompsEstimator
 from .quality import OODGuard, basic_rules
+from .s3_registry import sync_model_from_s3
 
 class PredictionService:
     def __init__(self):
@@ -20,6 +21,17 @@ class PredictionService:
         self.registry_dir = os.getenv("MODEL_REGISTRY_DIR", "model")
         self.default_model_name = os.getenv("MODEL_DEFAULT", "enhanced_auto")
         self.models = {}  # name -> (model, feature_order, version)
+
+        # If MODEL_REGISTRY_S3_PREFIX set, ensure default model exists locally
+        s3_prefix = os.getenv("MODEL_REGISTRY_S3_PREFIX")
+        if s3_prefix:
+            sync_model_from_s3(s3_prefix, self.default_model_name, self.registry_dir)
+            # optionally ensure the baseline is present too:
+            try:
+                sync_model_from_s3(s3_prefix, "baseline_knn", self.registry_dir)
+            except Exception:
+                pass
+        
         # preload default
         self._ensure_loaded(self.default_model_name)
 
