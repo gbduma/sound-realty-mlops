@@ -8,11 +8,22 @@ import numpy as np
 import pandas as pd
 
 from .features import build_features, load_demographics
+from fastapi.exceptions import HTTPException
 from .model_loader import load_model_from_dir
 from concurrent.futures import ThreadPoolExecutor
 from .comps import CompsEstimator
 from .quality import OODGuard, basic_rules
 from .s3_registry import sync_model_from_s3
+
+MINIMAL_REQUIRED = [
+    "zipcode",
+    "bedrooms",
+    "bathrooms",
+    "sqft_living",
+    "sqft_lot",
+    "floors",
+    "sqft_above",
+    "sqft_basement"]
 
 class PredictionService:
     def __init__(self):
@@ -153,11 +164,8 @@ class PredictionService:
         Accept only the strictly required request-side fields.
         We join demographics and build the final matrix internally.
         """
-        demo_cols = set(self.demo_df.columns) - {"zipcode"}
-        feat_order = self.models[model_name][1]
-        required = ["zipcode"] + [f for f in feat_order if f not in demo_cols and f != "zipcode"]
-        missing = [k for k in required if k not in payload]
+        missing = [k for k in MINIMAL_REQUIRED if k not in payload]
         if missing:
-            raise ValueError(f"Missing required fields for minimal endpoint: {missing}")
-        row = {k: payload[k] for k in required}
+            raise HTTPException(status_code=400, detail=f"Missing required minimal fields: {missing}")
+        row = {k: payload.get(k) for k in MINIMAL_REQUIRED}
         return self._predict_core(row, model_name)

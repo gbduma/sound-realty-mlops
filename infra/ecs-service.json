@@ -1,0 +1,22 @@
+{
+  "cluster": "sound-realty-mlops",
+  "serviceName": "sound-realty-mlops-svc",
+  "taskDefinition": "sound-realty-mlops-td",
+  "desiredCount": 1,
+  "launchType": "FARGATE",
+  "networkConfiguration": {
+    "awsvpcConfiguration": {
+      "subnets": ["subnet-03faea5e5aaccf3cc", "subnet-06efae720c1669ecf "],
+      "securityGroups": ["sg-0d32aa4f5c49540e3"],
+      "assignPublicIp": "ENABLED"
+    }
+  },
+  "loadBalancers": [
+    {
+      "targetGroupArn": "arn:aws:elasticloadbalancing:us-east-2:736296213166:targetgroup/sound-realty-mlops-tg/63e1b83c19ba539e",
+      "containerName": "api",
+      "containerPort": 8080
+    }
+  ],
+  "healthCheckGracePeriodSeconds": 30
+}

@@ -1,0 +1,105 @@
+name: deploy-ecs
+
+on:
+  push:
+    branches: [ main ]
+  # or use tags:
+  # tags:
+  #   - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ secrets.AWS_REGION }}
+      AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+      ECR_REPOSITORY: ${{ secrets.ECR_REPOSITORY }}
+      ECS_CLUSTER: ${{ secrets.ECS_CLUSTER }}
+      ECS_SERVICE: ${{ secrets.ECS_SERVICE }}
+      IMAGE_TAG: ${{ github.sha }} # unique per commit; you can also add "latest"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build & push image
+        run: |
+          ECR_REGISTRY="${{ steps.login-ecr.outputs.registry }}"
+          IMAGE_URI="$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG"
+          echo "Building $IMAGE_URI"
+          docker build -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+          echo "IMAGE_URI=$IMAGE_URI" >> $GITHUB_ENV
+
+      - name: Get current task definition ARN
+        id: get-td
+        run: |
+          TD_ARN=$(aws ecs describe-services \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE" \
+            --query "services[0].taskDefinition" \
+            --output text)
+          echo "TD_ARN=$TD_ARN" >> $GITHUB_ENV
+          echo "TaskDefArn=$TD_ARN"
+
+      - name: Download current task definition JSON
+        run: |
+          aws ecs describe-task-definition \
+            --task-definition "$TD_ARN" \
+            --query "taskDefinition" > taskdef.json
+          cat taskdef.json | head -n 40
+
+      - name: Create new task definition JSON with updated image
+        run: |
+          # replace image for container named "api" (matches your taskdef)
+          NEW_TD=$(jq --arg IMAGE "$IMAGE_URI" '
+            .containerDefinitions |=
+              (map(if .name=="api" then .image=$IMAGE else . end))
+            | del(.revision, .status, .taskDefinitionArn, .requiresAttributes, .compatibilities, .registeredAt, .registeredBy)
+          ' taskdef.json)
+          echo "$NEW_TD" > new-taskdef.json
+          cat new-taskdef.json | head -n 60
+
+      - name: Register new task definition revision
+        id: register-td
+        run: |
+          NEW_TD_ARN=$(aws ecs register-task-definition \
+            --cli-input-json file://new-taskdef.json \
+            --query "taskDefinition.taskDefinitionArn" \
+            --output text)
+          echo "NEW_TD_ARN=$NEW_TD_ARN" >> $GITHUB_ENV
+          echo "NewTaskDefArn=$NEW_TD_ARN"
+
+      - name: Update service to new task definition (force new deployment)
+        run: |
+          aws ecs update-service \
+            --cluster "$ECS_CLUSTER" \
+            --service "$ECS_SERVICE" \
+            --task-definition "$NEW_TD_ARN" \
+            --force-new-deployment
+
+      - name: Wait for service to stabilize
+        run: |
+          aws ecs wait services-stable \
+            --cluster "$ECS_CLUSTER" \
+            --services "$ECS_SERVICE"
+          echo "Service is stable."
+
+      # Optional: print target health (nice for logs)
+      - name: Describe service + target health
+        run: |
+          aws ecs describe-services --cluster "$ECS_CLUSTER" --services "$ECS_SERVICE" --query 'services[0].deployments'

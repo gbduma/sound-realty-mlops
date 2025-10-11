@@ -1,0 +1,33 @@
+{
+  "family": "sound-realty-mlops-td",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::736296213166:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::736296213166:role/ecsTaskRole-SoundRealty",
+  "containerDefinitions": [
+    {
+      "name": "api",
+      "image": "736296213166.dkr.ecr.us-east-2.amazonaws.com/sound-realty-mlops:v0.1.0",
+      "portMappings": [
+        { "containerPort": 8080, "protocol": "tcp" }
+      ],
+      "essential": true,
+      "environment": [
+        { "name": "MODEL_DEFAULT", "value": "enhanced_auto" },
+        { "name": "MODEL_REGISTRY_S3_PREFIX", "value": "s3://sound-realty-mlops-models-736296213166/model" },
+        { "name": "AWS_REGION", "value": "us-east-2" },
+        { "name": "PYTHONPATH", "value": "/srv" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-region": "us-east-2",
+          "awslogs-group": "/ecs/sound-realty-mlops",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

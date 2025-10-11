@@ -6,6 +6,18 @@ import pandas as pd
 
 # choose a sensible reference year; KC dataset centers around 2014–2015
 CURRENT_YEAR = 2015
+_OPTIONAL_DEFAULTS = {
+    "waterfront": 0,
+    "view": 0,
+    "condition": 3,
+    "grade": 7,
+    "yr_built": CURRENT_YEAR,   # used in _engineer; CURRENT_YEAR implies "unknown"
+    "yr_renovated": 0,
+    "lat": 47.6,
+    "long": -122.3,
+    "sqft_living15": 0,
+    "sqft_lot15": 0,
+}
 
 def _series_default(df: pd.DataFrame, value) -> pd.Series:
     """Return a Series of length len(df) filled with `value`."""
@@ -80,10 +92,15 @@ def build_features(df_in: pd.DataFrame, demo_df: pd.DataFrame, add_engineered: b
     df = df_in.copy()
     df["zipcode"] = _zip_as_str(df["zipcode"])
 
+    for col, val in _OPTIONAL_DEFAULTS.items():
+        if col not in df.columns:
+            df[col] = val
+
     merged = df.merge(demo_df, on="zipcode", how="left", suffixes=("", "_demo"))
 
     # track any missing demo rows (non-fatal)
-    merged["_missing_demo"] = merged.filter(regex="_demo$|^ppltn_|^medn_|^hous_val_|^per_").isna().any(axis=1).astype(int)
+    merged["_missing_demo"] = merged.filter(
+        regex="_demo$|^ppltn_|^medn_|^hous_val_|^per_").isna().any(axis=1).astype(int)
     merged = _safe_fill(merged)
 
     if add_engineered:
